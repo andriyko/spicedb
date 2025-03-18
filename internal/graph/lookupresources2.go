@@ -307,6 +307,7 @@ func (crr *CursoredLookupResources2) redispatchOrReportOverDatabaseQuery(
 				}),
 				options.WithSortForReverse(options.BySubject),
 				options.WithAfterForReverse(queryCursor),
+				options.WithIncludeObjectDataForReverse(config.parentRequest.IncludeObjectData),
 			)
 			if err != nil {
 				return nil, err
@@ -563,6 +564,7 @@ func (crr *CursoredLookupResources2) redispatchOrReport(
 
 						filtered = make([]possibleResourceAndIndex, 0, len(offsetted))
 						for index, resource := range offsetted {
+							resource.ResourceData = foundResources.GetObjectData(resource.ResourceId)
 							result, ok := resultsByResourceID[resource.ResourceId]
 							if !ok {
 								continue
@@ -582,6 +584,7 @@ func (crr *CursoredLookupResources2) redispatchOrReport(
 								filtered = append(filtered, possibleResourceAndIndex{
 									resource: &v1.PossibleResource{
 										ResourceId:           resource.ResourceId,
+										ResourceData:         resource.ResourceData,
 										ForSubjectIds:        resource.ForSubjectIds,
 										MissingContextParams: missingContextParams.AsSlice(),
 									},
@@ -644,9 +647,10 @@ func (crr *CursoredLookupResources2) redispatchOrReport(
 						AtRevision:     parentRequest.Revision.String(),
 						DepthRemaining: parentRequest.Metadata.DepthRemaining - 1,
 					},
-					OptionalCursor: ci.currentCursor,
-					OptionalLimit:  parentRequest.OptionalLimit,
-					Context:        parentRequest.Context,
+					OptionalCursor:    ci.currentCursor,
+					OptionalLimit:     parentRequest.OptionalLimit,
+					Context:           parentRequest.Context,
+					IncludeObjectData: parentRequest.IncludeObjectData,
 				}, stream)
 			}
 

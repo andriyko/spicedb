@@ -44,6 +44,12 @@ var (
 
 	deleteNamespaceTuples = psql.Update(tableTuple).Where(sq.Eq{colDeletedXid: liveDeletedTxnID})
 
+	writeObject = psql.Insert(tableObjectData).Columns(
+		colOdType,
+		colOdID,
+		colOdData,
+	)
+
 	writeTuple = psql.Insert(tableTuple).Columns(
 		colNamespace,
 		colObjectID,
@@ -169,12 +175,60 @@ func (rwt *pgReadWriteTXN) collectSimplifiedTouchTypes(ctx context.Context, muta
 	return relationSupportSimplifiedTouch, nil
 }
 
+type objectKey struct {
+	ObjectType string
+	ObjectID   string
+}
+
+type objectsForInsert struct {
+	insertBuilder sq.InsertBuilder
+	objectKeys    map[objectKey]struct{}
+}
+
+func (o *objectsForInsert) Add(obj tuple.ObjectAndRelation) {
+	if obj.ObjectData != nil {
+		key := objectKey{
+			ObjectType: obj.ObjectType,
+			ObjectID:   obj.ObjectID,
+		}
+		if _, exists := o.objectKeys[key]; !exists {
+			o.objectKeys[key] = struct{}{}
+			valuesToWrite := []any{
+				obj.ObjectType,
+				obj.ObjectID,
+				obj.ObjectData.AsMap(),
+			}
+			o.insertBuilder = o.insertBuilder.Values(valuesToWrite...)
+		}
+	}
+}
+
+func (o *objectsForInsert) HasObjectsForInsert() bool {
+	return len(o.objectKeys) > 0
+}
+
+func (o *objectsForInsert) Insert(ctx context.Context, tx pgx.Tx) error {
+	sql, args, err := o.insertBuilder.Suffix(fmt.Sprintf("ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s = EXCLUDED.%s",
+		constrOdLiving, colOdData, colOdData)).ToSql()
+	if err != nil {
+		return fmt.Errorf("unable to build insert objects query: %w", err)
+	}
+	if _, err = tx.Exec(ctx, sql, args...); err != nil {
+		return fmt.Errorf("unable to write objects data: %w", err)
+	}
+	return nil
+}
+
 func (rwt *pgReadWriteTXN) WriteRelationships(ctx context.Context, mutations []tuple.RelationshipUpdate) error {
 	touchMutationsByNonCaveat := make(map[string]tuple.RelationshipUpdate, len(mutations))
 	hasCreateInserts := false
 
 	createInserts := writeTuple
 	touchInserts := writeTuple
+	objectInserts := objectsForInsert{
+		insertBuilder: writeObject,
+		objectKeys:    make(map[objectKey]struct{}, len(mutations)),
+	}
 
 	deleteClauses := sq.Or{}
 
@@ -197,16 +251,26 @@ func (rwt *pgReadWriteTXN) WriteRelationships(ctx context.Context, mutations []t
 		case tuple.UpdateOperationCreate:
 			createInserts = appendForInsertion(createInserts, rel)
 			hasCreateInserts = true
+			objectInserts.Add(rel.Resource)
+			objectInserts.Add(rel.Subject)
 
 		case tuple.UpdateOperationTouch:
 			touchInserts = appendForInsertion(touchInserts, rel)
 			touchMutationsByNonCaveat[tuple.StringWithoutCaveatOrExpiration(rel)] = mut
+			objectInserts.Add(rel.Resource)
+			objectInserts.Add(rel.Subject)
 
 		case tuple.UpdateOperationDelete:
 			deleteClauses = append(deleteClauses, exactRelationshipClause(rel))
 
 		default:
 			return spiceerrors.MustBugf("unknown tuple mutation: %v", mut)
+		}
+	}
+
+	if objectInserts.HasObjectsForInsert() {
+		if err := objectInserts.Insert(ctx, rwt.tx); err != nil {
+			return handleWriteError(err)
 		}
 	}
 
@@ -756,8 +820,14 @@ var copyCols = []string{
 	colExpiration,
 }
 
+var copyObjectCols = []string{
+	colOdType,
+	colOdID,
+	colOdData,
+}
+
 func (rwt *pgReadWriteTXN) BulkLoad(ctx context.Context, iter datastore.BulkWriteRelationshipSource) (uint64, error) {
-	return pgxcommon.BulkLoad(ctx, rwt.tx, tableTuple, copyCols, iter)
+	return pgxcommon.BulkLoadWithObjectData(ctx, rwt.tx, tableTuple, copyCols, tableObjectData, copyObjectCols, iter)
 }
 
 func exactRelationshipClause(r tuple.Relationship) sq.Eq {

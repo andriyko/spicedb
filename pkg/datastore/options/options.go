@@ -45,21 +45,23 @@ type Assertion func(sql string)
 
 // QueryOptions are the options that can affect the results of a normal forward query.
 type QueryOptions struct {
-	Limit          *uint64   `debugmap:"visible"`
-	Sort           SortOrder `debugmap:"visible"`
-	After          Cursor    `debugmap:"visible"`
-	SkipCaveats    bool      `debugmap:"visible"`
-	SkipExpiration bool      `debugmap:"visible"`
-	SQLAssertion   Assertion `debugmap:"visible"`
+	Limit             *uint64   `debugmap:"visible"`
+	Sort              SortOrder `debugmap:"visible"`
+	After             Cursor    `debugmap:"visible"`
+	SkipCaveats       bool      `debugmap:"visible"`
+	SkipExpiration    bool      `debugmap:"visible"`
+	SQLAssertion      Assertion `debugmap:"visible"`
+	IncludeObjectData bool      `debugmap:"visible"`
 }
 
 // ReverseQueryOptions are the options that can affect the results of a reverse query.
 type ReverseQueryOptions struct {
 	ResRelation *ResourceRelation `debugmap:"visible"`
 
-	LimitForReverse *uint64   `debugmap:"visible"`
-	SortForReverse  SortOrder `debugmap:"visible"`
-	AfterForReverse Cursor    `debugmap:"visible"`
+	LimitForReverse             *uint64   `debugmap:"visible"`
+	SortForReverse              SortOrder `debugmap:"visible"`
+	AfterForReverse             Cursor    `debugmap:"visible"`
+	IncludeObjectDataForReverse bool      `debugmap:"visible"`
 }
 
 // ResourceRelation combines a resource object type and relation.

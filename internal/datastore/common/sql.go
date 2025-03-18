@@ -704,6 +704,10 @@ func (b RelationshipsQueryBuilder) integrityEnabled() bool {
 // columnCount returns the number of columns that will be selected in the query.
 func (b RelationshipsQueryBuilder) columnCount() int {
 	columnCount := relationshipStandardColumnCount
+	// Add object data columns if present in extraFields
+	if len(b.baseQueryBuilder.extraFields) > 0 {
+		columnCount += len(b.baseQueryBuilder.extraFields)
+	}
 	if b.withCaveats() {
 		columnCount += relationshipCaveatColumnCount
 	}
@@ -727,7 +731,10 @@ func (b RelationshipsQueryBuilder) SelectSQL() (string, []any, error) {
 	columnNamesToSelect = b.checkColumn(columnNamesToSelect, b.Schema.ColUsersetNamespace)
 	columnNamesToSelect = b.checkColumn(columnNamesToSelect, b.Schema.ColUsersetObjectID)
 	columnNamesToSelect = b.checkColumn(columnNamesToSelect, b.Schema.ColUsersetRelation)
-
+	// Add object data columns if they are present in the query
+	if len(b.baseQueryBuilder.extraFields) > 0 {
+		columnNamesToSelect = append(columnNamesToSelect, b.baseQueryBuilder.extraFields...)
+	}
 	if b.withCaveats() {
 		columnNamesToSelect = append(columnNamesToSelect, b.Schema.ColCaveatName, b.Schema.ColCaveatContext)
 	}
@@ -800,9 +807,11 @@ func ColumnsToSelect[CN any, CC any, EC any](
 	b RelationshipsQueryBuilder,
 	resourceObjectType *string,
 	resourceObjectID *string,
+	resourceObjectData *map[string]any,
 	resourceRelation *string,
 	subjectObjectType *string,
 	subjectObjectID *string,
+	subjectObjectData *map[string]any,
 	subjectRelation *string,
 	caveatName *CN,
 	caveatCtx *CC,
@@ -820,7 +829,15 @@ func ColumnsToSelect[CN any, CC any, EC any](
 	colsToSelect = b.staticValueOrAddColumnForSelect(colsToSelect, b.Schema.ColUsersetNamespace, subjectObjectType)
 	colsToSelect = b.staticValueOrAddColumnForSelect(colsToSelect, b.Schema.ColUsersetObjectID, subjectObjectID)
 	colsToSelect = b.staticValueOrAddColumnForSelect(colsToSelect, b.Schema.ColUsersetRelation, subjectRelation)
-
+	// Add object data columns if requested and present in extra fields
+	if len(b.baseQueryBuilder.extraFields) > 0 {
+		if resourceObjectData != nil {
+			colsToSelect = append(colsToSelect, resourceObjectData)
+		}
+		if subjectObjectData != nil {
+			colsToSelect = append(colsToSelect, subjectObjectData)
+		}
+	}
 	if b.withCaveats() {
 		colsToSelect = append(colsToSelect, caveatName, caveatCtx)
 	}

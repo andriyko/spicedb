@@ -37,6 +37,7 @@ func (q *QueryOptions) ToOption() QueryOptionsOption {
 		to.SkipCaveats = q.SkipCaveats
 		to.SkipExpiration = q.SkipExpiration
 		to.SQLAssertion = q.SQLAssertion
+		to.IncludeObjectData = q.IncludeObjectData
 	}
 }
 
@@ -49,6 +50,7 @@ func (q QueryOptions) DebugMap() map[string]any {
 	debugMap["SkipCaveats"] = helpers.DebugValue(q.SkipCaveats, false)
 	debugMap["SkipExpiration"] = helpers.DebugValue(q.SkipExpiration, false)
 	debugMap["SQLAssertion"] = helpers.DebugValue(q.SQLAssertion, false)
+	debugMap["IncludeObjectData"] = helpers.DebugValue(q.IncludeObjectData, false)
 	return debugMap
 }
 
@@ -110,6 +112,13 @@ func WithSQLAssertion(sQLAssertion Assertion) QueryOptionsOption {
 	}
 }
 
+// WithIncludeObjectData returns an option that can set IncludeObjectData on a QueryOptions
+func WithIncludeObjectData(includeObjectData bool) QueryOptionsOption {
+	return func(q *QueryOptions) {
+		q.IncludeObjectData = includeObjectData
+	}
+}
+
 type ReverseQueryOptionsOption func(r *ReverseQueryOptions)
 
 // NewReverseQueryOptionsWithOptions creates a new ReverseQueryOptions with the passed in options set
@@ -138,6 +147,7 @@ func (r *ReverseQueryOptions) ToOption() ReverseQueryOptionsOption {
 		to.LimitForReverse = r.LimitForReverse
 		to.SortForReverse = r.SortForReverse
 		to.AfterForReverse = r.AfterForReverse
+		to.IncludeObjectDataForReverse = r.IncludeObjectDataForReverse
 	}
 }
 
@@ -148,6 +158,7 @@ func (r ReverseQueryOptions) DebugMap() map[string]any {
 	debugMap["LimitForReverse"] = helpers.DebugValue(r.LimitForReverse, false)
 	debugMap["SortForReverse"] = helpers.DebugValue(r.SortForReverse, false)
 	debugMap["AfterForReverse"] = helpers.DebugValue(r.AfterForReverse, false)
+	debugMap["IncludeObjectDataForReverse"] = helpers.DebugValue(r.IncludeObjectDataForReverse, false)
 	return debugMap
 }
 
@@ -192,6 +203,13 @@ func WithSortForReverse(sortForReverse SortOrder) ReverseQueryOptionsOption {
 func WithAfterForReverse(afterForReverse Cursor) ReverseQueryOptionsOption {
 	return func(r *ReverseQueryOptions) {
 		r.AfterForReverse = afterForReverse
+	}
+}
+
+// WithIncludeObjectDataForReverse returns an option that can set IncludeObjectDataForReverse on a ReverseQueryOptions
+func WithIncludeObjectDataForReverse(includeObjectDataForReverse bool) ReverseQueryOptionsOption {
+	return func(r *ReverseQueryOptions) {
+		r.IncludeObjectDataForReverse = includeObjectDataForReverse
 	}
 }
 

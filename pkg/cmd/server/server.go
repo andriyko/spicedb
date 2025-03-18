@@ -122,6 +122,7 @@ type Config struct {
 	EnableExperimentalLookupResources        bool          `debugmap:"visible"`
 	EnableExperimentalRelationshipExpiration bool          `debugmap:"visible"`
 	EnableRevisionHeartbeat                  bool          `debugmap:"visible"`
+	EnableObjectStorage                      bool          `debugmap:"visible"`
 
 	// Additional Services
 	MetricsAPI util.HTTPServerConfig `debugmap:"visible"`
@@ -443,6 +444,7 @@ func (c *Config) Complete(ctx context.Context) (RunnableServer, error) {
 		MaxBulkExportRelationshipsLimit: c.MaxBulkExportRelationshipsLimit,
 		DispatchChunkSize:               c.DispatchChunkSize,
 		ExpiringRelationshipsEnabled:    c.EnableExperimentalRelationshipExpiration,
+		ObjectStorageEnabled:            c.EnableObjectStorage,
 	}
 
 	healthManager := health.NewHealthManager(dispatcher, ds)

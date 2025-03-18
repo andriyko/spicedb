@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	core "github.com/authzed/spicedb/pkg/proto/core/v1"
@@ -24,13 +25,19 @@ const (
 type ObjectAndRelation struct {
 	ObjectID   string
 	ObjectType string
+	ObjectData *structpb.Struct
 	Relation   string
 }
 
-const onrStructSize = 48 /* size of the struct itself */
+const onrStructSize = 64 /* size of the struct itself */
 
 func (onr ObjectAndRelation) SizeVT() int {
-	return len(onr.ObjectID) + len(onr.ObjectType) + len(onr.Relation) + onrStructSize
+	size := len(onr.ObjectID) + len(onr.ObjectType) + len(onr.Relation) + onrStructSize
+	if onr.ObjectData != nil {
+		props, _ := onr.ObjectData.MarshalJSON()
+		size += len(props)
+	}
+	return size
 }
 
 // WithRelation returns a copy of the object and relation with the given relation.
@@ -50,9 +57,10 @@ func (onr ObjectAndRelation) RelationReference() RelationReference {
 // ToCoreONR converts the ObjectAndRelation to a core.ObjectAndRelation.
 func (onr ObjectAndRelation) ToCoreONR() *core.ObjectAndRelation {
 	return &core.ObjectAndRelation{
-		Namespace: onr.ObjectType,
-		ObjectId:  onr.ObjectID,
-		Relation:  onr.Relation,
+		Namespace:  onr.ObjectType,
+		ObjectId:   onr.ObjectID,
+		ObjectData: onr.ObjectData,
+		Relation:   onr.Relation,
 	}
 }
 
@@ -180,21 +188,24 @@ func (rr RelationReference) ToCoreRR() *core.RelationReference {
 }
 
 // ONR creates an ObjectAndRelation.
-func ONR(namespace, objectID, relation string) ObjectAndRelation {
+func ONR(namespace, objectID, relation string, objectData ...*structpb.Struct) ObjectAndRelation {
 	spiceerrors.DebugAssert(func() bool {
 		return namespace != "" && objectID != "" && relation != ""
 	}, "invalid ONR: %s %s %s", namespace, objectID, relation)
-
-	return ObjectAndRelation{
+	onr := ObjectAndRelation{
 		ObjectType: namespace,
 		ObjectID:   objectID,
 		Relation:   relation,
 	}
+	if len(objectData) > 0 {
+		onr.ObjectData = objectData[0]
+	}
+	return onr
 }
 
 // ONRRef creates an ObjectAndRelation reference.
-func ONRRef(namespace, objectID, relation string) *ObjectAndRelation {
-	onr := ONR(namespace, objectID, relation)
+func ONRRef(namespace, objectID, relation string, objectData ...*structpb.Struct) *ObjectAndRelation {
+	onr := ONR(namespace, objectID, relation, objectData...)
 	return &onr
 }
 

@@ -47,6 +47,7 @@ const (
 	tableTuple               = "relation_tuple"
 	tableCaveat              = "caveat"
 	tableRelationshipCounter = "relationship_counter"
+	tableObjectData          = "object_data"
 
 	colXID               = "xid"
 	colTimestamp         = "timestamp"
@@ -71,6 +72,14 @@ const (
 	colCounterFilter       = "serialized_filter"
 	colCounterCurrentCount = "current_count"
 	colCounterSnapshot     = "updated_revision_snapshot"
+
+	colOdType       = "od_type"
+	colOdData       = "od_data"
+	colOdID         = "od_id"
+	colOdCreatedXid = "od_created_xid"
+	colOdDeletedXid = "od_deleted_xid"
+
+	constrOdLiving = "uq_object_data_living"
 
 	errUnableToInstantiate = "unable to instantiate datastore"
 

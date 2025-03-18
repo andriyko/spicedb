@@ -149,11 +149,35 @@ func (r *pgReader) QueryRelationships(
 	filter datastore.RelationshipsFilter,
 	opts ...options.QueryOptionsOption,
 ) (iter datastore.RelationshipIterator, err error) {
-	qBuilder, err := common.NewSchemaQueryFiltererForRelationshipsSelect(r.schema, r.filterMaximumIDCount).
+	queryOpts := options.NewQueryOptionsWithOptions(opts...)
+	// Initialize extra fields for object data if requested
+	var extraFields []string
+	if queryOpts.IncludeObjectData {
+		extraFields = []string{
+			fmt.Sprintf("COALESCE(res_data.%s, '{}'::jsonb) AS resource_object_data", colOdData),
+			fmt.Sprintf("COALESCE(sub_data.%s, '{}'::jsonb) AS subject_object_data", colOdData),
+		}
+	}
+
+	qBuilder, err := common.NewSchemaQueryFiltererForRelationshipsSelect(r.schema, r.filterMaximumIDCount, extraFields...).
 		WithAdditionalFilter(r.aliveFilter).
 		FilterWithRelationshipsFilter(filter)
 	if err != nil {
 		return nil, err
+	}
+	// Add object data joins if requested
+	if queryOpts.IncludeObjectData {
+		qBuilder = qBuilder.WithAdditionalFilter(func(original sq.SelectBuilder) sq.SelectBuilder {
+			// Use the same visibility rules as the main relationship query
+			query := original.
+				LeftJoin(fmt.Sprintf("%s AS res_data ON res_data.%s = %s AND res_data.%s = %s",
+					tableObjectData, colOdType, colNamespace, colOdID, colObjectID)).
+				LeftJoin(fmt.Sprintf("%s AS sub_data ON sub_data.%s = %s AND sub_data.%s = %s",
+					tableObjectData, colOdType, colUsersetNamespace, colOdID, colUsersetObjectID))
+			// Apply the same visibility filter to object data as used for relationships
+			query = r.aliveFilter(query)
+			return query
+		})
 	}
 
 	return r.executor.ExecuteQuery(ctx, qBuilder, opts...)
