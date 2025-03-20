@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	CHUNK_SIZE int = 5000
-	BUFF_SIZE  int = 1000
+	chunkSize int = 5000
+	buffSize  int = 1000
 )
 
 type tupleSourceAdapter struct {
@@ -352,7 +352,7 @@ func BulkLoadWithObjectData(
 
 	for {
 		// Create a limited source for this chunk
-		chunkSource := newLimitedSource(ctx, iter, CHUNK_SIZE)
+		chunkSource := newLimitedSource(ctx, iter, chunkSize)
 
 		// Skip if no data remains
 		if chunkSource.isEmpty {
@@ -360,7 +360,7 @@ func BulkLoadWithObjectData(
 		}
 
 		// Create factory for this chunk
-		factory := newCopySourceFactory(ctx, chunkSource, CHUNK_SIZE)
+		factory := newCopySourceFactory(ctx, chunkSource, chunkSize)
 
 		// First pass: Copy to tuple table
 		pipeTuples := factory.createPipeReader()

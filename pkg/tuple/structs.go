@@ -29,7 +29,7 @@ type ObjectAndRelation struct {
 	Relation   string
 }
 
-const onrStructSize = 64 /* size of the struct itself */
+const onrStructSize = 56 /* size of the struct itself */
 
 func (onr ObjectAndRelation) SizeVT() int {
 	size := len(onr.ObjectID) + len(onr.ObjectType) + len(onr.Relation) + onrStructSize
@@ -101,7 +101,7 @@ func (r Relationship) ToCoreTuple() *core.RelationTuple {
 	}
 }
 
-const relStructSize = 120 /* size of the struct itself */
+const relStructSize = 136 /* size of the struct itself */
 
 func (r Relationship) SizeVT() int {
 	size := r.Resource.SizeVT() + r.Subject.SizeVT() + relStructSize

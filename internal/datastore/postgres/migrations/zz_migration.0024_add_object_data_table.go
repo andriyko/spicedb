@@ -1,8 +1,9 @@
 package migrations
 
 import (
-    "context"
-    "github.com/jackc/pgx/v5"
+	"context"
+
+	"github.com/jackc/pgx/v5"
 )
 
 const createObjectDataTable = `
@@ -32,17 +33,17 @@ CREATE INDEX ix_watch_object_data ON object_data USING btree (od_created_xid);
 CREATE INDEX ix_object_data_jsonb ON object_data USING gin (od_data);`
 
 func init() {
-    if err := DatabaseMigrations.Register(
-        "add-object-data-table",
-        "add-index-for-transaction-gc",  // previous migration name
-        noNonatomicMigration,
-        func(ctx context.Context, tx pgx.Tx) error {
-            if _, err := tx.Exec(ctx, createObjectDataTable); err != nil {
-                return err
-            }
-            return nil
-        },
-    ); err != nil {
-        panic("failed to register migration: " + err.Error())
-    }
+	if err := DatabaseMigrations.Register(
+		"add-object-data-table",
+		"add-index-for-transaction-gc", // previous migration name
+		noNonatomicMigration,
+		func(ctx context.Context, tx pgx.Tx) error {
+			if _, err := tx.Exec(ctx, createObjectDataTable); err != nil {
+				return err
+			}
+			return nil
+		},
+	); err != nil {
+		panic("failed to register migration: " + err.Error())
+	}
 }

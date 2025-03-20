@@ -4,12 +4,13 @@ import (
 	"sort"
 	"sync"
 
+	"google.golang.org/protobuf/types/known/structpb"
+
 	"github.com/authzed/spicedb/pkg/genutil/mapz"
 	core "github.com/authzed/spicedb/pkg/proto/core/v1"
 	v1 "github.com/authzed/spicedb/pkg/proto/dispatch/v1"
 	"github.com/authzed/spicedb/pkg/spiceerrors"
 	"github.com/authzed/spicedb/pkg/tuple"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 type syncONRSet struct {
@@ -47,19 +48,19 @@ type subjectInfo2 struct {
 	missingContextParameters []string
 }
 
-func (rsm resourcesSubjectMap2) GetObjectData(resourceId string) *structpb.Struct {
-	objectData, ok := rsm.resourcesAndObjectData[resourceId]
+func (rsm resourcesSubjectMap2) GetObjectData(resourceID string) *structpb.Struct {
+	objectData, ok := rsm.resourcesAndObjectData[resourceID]
 	if !ok {
 		return nil
 	}
 	return objectData
 }
 
-func (rsm resourcesSubjectMap2) AddObjectData(resourceId string, resourceData *structpb.Struct) {
+func (rsm resourcesSubjectMap2) AddObjectData(resourceID string, resourceData *structpb.Struct) {
 	if resourceData == nil {
 		return
 	}
-	rsm.resourcesAndObjectData[resourceId] = resourceData
+	rsm.resourcesAndObjectData[resourceID] = resourceData
 }
 
 func newResourcesSubjectMap2(resourceType *core.RelationReference) resourcesSubjectMap2 {
