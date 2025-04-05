@@ -147,8 +147,8 @@ func (r *pgReader) lookupCounters(ctx context.Context, optionalName string) ([]d
 
 func getObjectDataFields() []string {
 	return []string{
-		fmt.Sprintf("COALESCE(res_data.%s, '{}'::jsonb) AS resource_object_data", colOdData),
-		fmt.Sprintf("COALESCE(sub_data.%s, '{}'::jsonb) AS subject_object_data", colOdData),
+		fmt.Sprintf("COALESCE(res_data.%s, '{}'::jsonb) AS resource_object_data", schema.ColOdData),
+		fmt.Sprintf("COALESCE(sub_data.%s, '{}'::jsonb) AS subject_object_data", schema.ColOdData),
 	}
 }
 
@@ -156,9 +156,9 @@ func (r *pgReader) addObjectDataJoins(original sq.SelectBuilder) sq.SelectBuilde
 	// Use the same visibility rules as the main relationship query
 	query := original.
 		LeftJoin(fmt.Sprintf("%s AS res_data ON res_data.%s = %s AND res_data.%s = %s",
-			tableObjectData, colOdType, colNamespace, colOdID, colObjectID)).
+			schema.TableObjectData, schema.ColOdType, schema.ColNamespace, schema.ColOdID, schema.ColObjectID)).
 		LeftJoin(fmt.Sprintf("%s AS sub_data ON sub_data.%s = %s AND sub_data.%s = %s",
-			tableObjectData, colOdType, colUsersetNamespace, colOdID, colUsersetObjectID))
+			schema.TableObjectData, schema.ColOdType, schema.ColUsersetNamespace, schema.ColOdID, schema.ColUsersetObjectID))
 	// Apply the same visibility filter to object data as used for relationships
 	query = r.aliveFilter(query)
 	return query

@@ -42,45 +42,7 @@ func init() {
 }
 
 const (
-	Engine                   = "postgres"
-	tableNamespace           = "namespace_config"
-	tableTransaction         = "relation_tuple_transaction"
-	tableTuple               = "relation_tuple"
-	tableCaveat              = "caveat"
-	tableRelationshipCounter = "relationship_counter"
-	tableObjectData          = "object_data"
-
-	colXID               = "xid"
-	colTimestamp         = "timestamp"
-	colMetadata          = "metadata"
-	colNamespace         = "namespace"
-	colConfig            = "serialized_config"
-	colCreatedXid        = "created_xid"
-	colDeletedXid        = "deleted_xid"
-	colSnapshot          = "snapshot"
-	colObjectID          = "object_id"
-	colRelation          = "relation"
-	colUsersetNamespace  = "userset_namespace"
-	colUsersetObjectID   = "userset_object_id"
-	colUsersetRelation   = "userset_relation"
-	colCaveatName        = "name"
-	colCaveatDefinition  = "definition"
-	colCaveatContextName = "caveat_name"
-	colCaveatContext     = "caveat_context"
-	colExpiration        = "expiration"
-
-	colCounterName         = "name"
-	colCounterFilter       = "serialized_filter"
-	colCounterCurrentCount = "current_count"
-	colCounterSnapshot     = "updated_revision_snapshot"
-
-	colOdType       = "od_type"
-	colOdData       = "od_data"
-	colOdID         = "od_id"
-	colOdCreatedXid = "od_created_xid"
-	colOdDeletedXid = "od_deleted_xid"
-
-	constrOdLiving = "uq_object_data_living"
+	Engine = "postgres"
 
 	errUnableToInstantiate = "unable to instantiate datastore"
 

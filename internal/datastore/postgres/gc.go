@@ -160,27 +160,27 @@ func (pgd *pgDatastore) DeleteBeforeTx(ctx context.Context, txID datastore.Revis
 		DELETE FROM %s
 		WHERE (tableoid, ctid) IN (SELECT tableoid, ctid FROM rows)
 		RETURNING 1`,
-		tableObjectData,
-		tableTuple,
-		colDeletedXid,
+		schema.TableObjectData,
+		schema.TableTuple,
+		schema.ColDeletedXid,
 		liveDeletedTxnID,
-		colNamespace,
-		colOdType,
-		colObjectID,
-		colOdID,
-		colUsersetNamespace,
-		colOdType,
-		colUsersetObjectID,
-		colOdID,
+		schema.ColNamespace,
+		schema.ColOdType,
+		schema.ColObjectID,
+		schema.ColOdID,
+		schema.ColUsersetNamespace,
+		schema.ColOdType,
+		schema.ColUsersetObjectID,
+		schema.ColOdID,
 		gcBatchDeleteSize,
-		tableObjectData,
+		schema.TableObjectData,
 	)
 
 	var objectsRemoved int64
 	for {
 		rows, err := pgd.writePool.Query(ctx, deleteUnreferencedObjects)
 		if err != nil {
-			return removed, fmt.Errorf("failed to GC %s table: %w", tableObjectData, err)
+			return removed, fmt.Errorf("failed to GC %s table: %w", schema.TableObjectData, err)
 		}
 		defer rows.Close()
 

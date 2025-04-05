@@ -45,10 +45,10 @@ var (
 
 	deleteNamespaceTuples = psql.Update(schema.TableTuple).Where(sq.Eq{schema.ColDeletedXid: liveDeletedTxnID})
 
-	writeObject = psql.Insert(tableObjectData).Columns(
-		colOdType,
-		colOdID,
-		colOdData,
+	writeObject = psql.Insert(schema.TableObjectData).Columns(
+		schema.ColOdType,
+		schema.ColOdID,
+		schema.ColOdData,
 	)
 
 	writeTuple = psql.Insert(schema.TableTuple).Columns(
@@ -210,7 +210,7 @@ func (o *objectsForInsert) HasObjectsForInsert() bool {
 
 func (o *objectsForInsert) Insert(ctx context.Context, tx pgx.Tx) error {
 	sql, args, err := o.insertBuilder.Suffix(fmt.Sprintf("ON CONFLICT ON CONSTRAINT %s DO UPDATE SET %s = EXCLUDED.%s",
-		constrOdLiving, colOdData, colOdData)).ToSql()
+		schema.ConstrOdLiving, schema.ColOdData, schema.ColOdData)).ToSql()
 	if err != nil {
 		return fmt.Errorf("unable to build insert objects query: %w", err)
 	}
@@ -822,13 +822,13 @@ var copyCols = []string{
 }
 
 var copyObjectCols = []string{
-	colOdType,
-	colOdID,
-	colOdData,
+	schema.ColOdType,
+	schema.ColOdID,
+	schema.ColOdData,
 }
 
 func (rwt *pgReadWriteTXN) BulkLoad(ctx context.Context, iter datastore.BulkWriteRelationshipSource) (uint64, error) {
-	return pgxcommon.BulkLoadWithObjectData(ctx, rwt.tx, schema.TableTuple, copyCols, tableObjectData, copyObjectCols, iter)
+	return pgxcommon.BulkLoadWithObjectData(ctx, rwt.tx, schema.TableTuple, copyCols, schema.TableObjectData, copyObjectCols, iter)
 }
 
 func exactRelationshipClause(r tuple.Relationship) sq.Eq {
