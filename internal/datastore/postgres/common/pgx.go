@@ -21,9 +21,9 @@ import (
 )
 
 // NewPGXQueryRelationshipsExecutor creates an executor that uses the pgx library to make the specified queries.
-func NewPGXQueryRelationshipsExecutor(querier DBFuncQuerier) common.ExecuteReadRelsQueryFunc {
+func NewPGXQueryRelationshipsExecutor(querier DBFuncQuerier, explainable datastore.Explainable) common.ExecuteReadRelsQueryFunc {
 	return func(ctx context.Context, builder common.RelationshipsQueryBuilder) (datastore.RelationshipIterator, error) {
-		return common.QueryRelationships[pgx.Rows, map[string]any](ctx, builder, querier)
+		return common.QueryRelationships[pgx.Rows, map[string]any](ctx, builder, querier, explainable)
 	}
 }
 
@@ -73,9 +73,10 @@ func ConfigurePGXLogger(connConfig *pgx.ConnConfig) {
 			truncateLargeSQL(data)
 
 			// log cancellation and serialization errors at debug level
+			// log revision not available errors at debug level
 			if errArg, ok := data["err"]; ok {
 				err, ok := errArg.(error)
-				if ok && (common.IsCancellationError(err) || IsSerializationError(err)) {
+				if ok && (common.IsCancellationError(err) || IsSerializationError(err) || IsReplicationLagError(err)) {
 					logger.Log(ctx, tracelog.LogLevelDebug, msg, data)
 					return
 				}
